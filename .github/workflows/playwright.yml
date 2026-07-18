@@ -34,6 +34,8 @@ jobs:
           key: appointment-state-${{ runner.os }}-${{ github.workflow }}-${{ github.repository }}
 
       - name: Run Playwright script
+        env:
+          WEBSITE: ${{ secrets.WEBSITE }}
         run: |
           mkdir -p .appointment-state
           npx playwright test browser.spec.ts

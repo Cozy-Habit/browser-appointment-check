@@ -4,8 +4,23 @@ import path from "path";
 import { test, expect } from "@playwright/test";
 import { loadEnvFile } from "process";
 
-loadEnvFile();
-const website = process.env.WEBSITE;
+let website = process.env.WEBSITE;
+
+if (!website) {
+  try {
+    loadEnvFile();
+    website = process.env.WEBSITE;
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code !== "ENOENT") {
+      throw error;
+    }
+  }
+}
+
+if (!website) {
+  throw new Error("WEBSITE environment variable is not set");
+}
+
 test("test", async ({ page }) => {
   await page.goto(website);
   await page.getByRole("heading", { name: "Termin" }).click();

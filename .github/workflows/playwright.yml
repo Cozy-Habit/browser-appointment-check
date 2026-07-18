@@ -29,15 +29,10 @@ jobs:
       - name: Run Playwright script
         run: npx playwright test browser.spec.ts
 
-      - name: Send phone notification on success
-        if: ${{ success() && secrets.PUSHOVER_TOKEN != '' && secrets.PUSHOVER_USER != '' }}
+      - name: Send ntfy.sh notification on success
+        if: ${{ success() && secrets.NTFY_TOPIC != '' }}
         env:
-          PUSHOVER_TOKEN: ${{ secrets.PUSHOVER_TOKEN }}
-          PUSHOVER_USER: ${{ secrets.PUSHOVER_USER }}
+          NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
         run: |
-          curl -s -X POST "https://api.pushover.net/1/messages.json" \
-            --data-urlencode "token=${PUSHOVER_TOKEN}" \
-            --data-urlencode "user=${PUSHOVER_USER}" \
-            --data-urlencode "title=Playwright test passed" \
-            --data-urlencode "message=There are new appointments. Click here for booking https://www.bonn.de/vv/produkte/AIDS-HIV-Beratung-Test-Untersuchung.php" \
-            --data-urlencode "priority=0"
+          curl -d "✓ Playwright test passed! New appointments may be available: https://www.bonn.de/vv/produkte/AIDS-HIV-Beratung-Test-Untersuchung.php" \
+            "https://ntfy.sh/${NTFY_TOPIC}"

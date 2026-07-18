@@ -2,8 +2,8 @@ name: Playwright scheduled run
 
 on:
   workflow_dispatch:
-  schedule:
-    - cron: "*/1 * * * *"
+  repository_dispatch:
+    types: [trigger-next-run]
 
 jobs:
   run-playwright:

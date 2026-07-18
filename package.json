@@ -1,0 +1,14 @@
+{
+  "name": "connect-four-playwright",
+  "private": true,
+  "scripts": {
+    "playwright": "node scripts/playwright-script.js"
+  },
+  "dependencies": {
+    "playwright": "^1.54.0"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.61.1",
+    "@types/node": "^26.1.1"
+  }
+}

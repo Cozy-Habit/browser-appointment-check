@@ -1,0 +1,43 @@
+name: Playwright scheduled run
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "*/15 * * * *"
+
+jobs:
+  run-playwright:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps
+
+      - name: Run Playwright script
+        run: npx playwright test browser.spec.ts
+
+      - name: Send phone notification on success
+        if: ${{ success() && secrets.PUSHOVER_TOKEN != '' && secrets.PUSHOVER_USER != '' }}
+        env:
+          PUSHOVER_TOKEN: ${{ secrets.PUSHOVER_TOKEN }}
+          PUSHOVER_USER: ${{ secrets.PUSHOVER_USER }}
+        run: |
+          curl -s -X POST "https://api.pushover.net/1/messages.json" \
+            --data-urlencode "token=${PUSHOVER_TOKEN}" \
+            --data-urlencode "user=${PUSHOVER_USER}" \
+            --data-urlencode "title=Playwright test passed" \
+            --data-urlencode "message=There are new appointments. Click here for booking https://www.bonn.de/vv/produkte/AIDS-HIV-Beratung-Test-Untersuchung.php" \
+            --data-urlencode "priority=0"

@@ -1,3 +1,6 @@
+import { createHash } from "crypto";
+import { mkdir, writeFile } from "fs/promises";
+import path from "path";
 import { test, expect } from "@playwright/test";
 
 test("test", async ({ page }) => {
@@ -13,5 +16,14 @@ test("test", async ({ page }) => {
   await page1.getByTestId("fieldset--16").getByRole("strong").click();
   await page1.getByTestId("fieldset--16").getByTestId("checkbox--1").check();
   await page1.getByTestId("button_next").click();
+
+  const snapshot = `${page1.url()}\n${await page1.locator("body").innerText()}`;
+  const stateHash = createHash("sha256").update(snapshot).digest("hex");
+  await mkdir(".appointment-state", { recursive: true });
+  await writeFile(
+    path.join(".appointment-state", "current-state.txt"),
+    stateHash,
+  );
+
   await expect(page1.getByTestId("error_message-")).not.toBeVisible();
 });

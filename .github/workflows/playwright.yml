@@ -26,11 +26,36 @@ jobs:
       - name: Install Playwright browsers
         run: npx playwright install chromium --with-deps
 
+      - name: Restore previous appointment state
+        uses: actions/cache@v4
+        with:
+          path: .appointment-state
+          key: appointment-state-${{ runner.os }}-${{ github.workflow }}-${{ github.repository }}
+
       - name: Run Playwright script
-        run: npx playwright test browser.spec.ts
+        run: |
+          mkdir -p .appointment-state
+          npx playwright test browser.spec.ts
+
+      - name: Compare appointment state
+        id: appointment_state
+        if: ${{ success() }}
+        run: |
+          mkdir -p .appointment-state
+          if [ -f .appointment-state/last-state.txt ]; then
+            if cmp -s .appointment-state/current-state.txt .appointment-state/last-state.txt; then
+              echo "changed=false" >> "$GITHUB_OUTPUT"
+            else
+              cp .appointment-state/current-state.txt .appointment-state/last-state.txt
+              echo "changed=true" >> "$GITHUB_OUTPUT"
+            fi
+          else
+            cp .appointment-state/current-state.txt .appointment-state/last-state.txt
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: Send ntfy.sh notification on success
-        if: ${{ success() && env.NTFY_TOPIC != '' }}
+        if: ${{ success() && steps.appointment_state.outputs.changed == 'true' && env.NTFY_TOPIC != '' }}
         env:
           NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
         run: |

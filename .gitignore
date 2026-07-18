@@ -1,4 +1,5 @@
-
+.env
+.appointment-state/**/*
 # Playwright
 node_modules/
 /test-results/

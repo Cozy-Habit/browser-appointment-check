@@ -2,11 +2,12 @@ import { createHash } from "crypto";
 import { mkdir, writeFile } from "fs/promises";
 import path from "path";
 import { test, expect } from "@playwright/test";
+import { loadEnvFile } from "process";
 
+loadEnvFile();
+const website = process.env.WEBSITE;
 test("test", async ({ page }) => {
-  await page.goto(
-    "https://www.bonn.de/vv/produkte/AIDS-HIV-Beratung-Test-Untersuchung.php",
-  );
+  await page.goto(website);
   await page.getByRole("heading", { name: "Termin" }).click();
   const page1Promise = page.waitForEvent("popup");
   await page

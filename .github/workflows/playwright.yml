@@ -30,7 +30,7 @@ jobs:
         run: npx playwright test browser.spec.ts
 
       - name: Send ntfy.sh notification on success
-        if: ${{ success() && secrets.NTFY_TOPIC != '' }}
+        if: ${{ success() && env.NTFY_TOPIC != '' }}
         env:
           NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
         run: |

@@ -32,10 +32,10 @@ test("test", async ({ page }) => {
   await page1.getByTestId("fieldset--16").getByRole("strong").click();
   await page1.getByTestId("fieldset--16").getByTestId("checkbox--1").check();
   await page1.waitForLoadState("domcontentloaded");
-  expect(page1.getByTestId("button_next").click());
+  await page1.getByTestId("button_next").click();
 
   await page1.waitForLoadState("domcontentloaded");
-  expect(page1.getByTestId("error_message-").isVisible());
+  await expect(page1.getByTestId("error_message-")).not.toBeVisible();
 
   const snapshot = `${page1.url()}\n${await page1.locator("body").innerText()}`;
   const stateHash = createHash("sha256").update(snapshot).digest("hex");

@@ -31,15 +31,35 @@ test("test", async ({ page }) => {
   const page1 = await page1Promise;
   await page1.getByTestId("fieldset--16").getByRole("strong").click();
   await page1.getByTestId("fieldset--16").getByTestId("checkbox--1").check();
+  await page1.waitForLoadState("domcontentloaded");
+  await expect(
+    page1
+      .locator('[data-testid="button_next"], [data-testid="error_message-"]')
+      .first(),
+  ).toBeVisible({ timeout: 10000 });
   await page1.getByTestId("button_next").click();
 
-  const snapshot = `${page1.url()}\n${await page1.locator("body").innerText()}`;
-  const stateHash = createHash("sha256").update(snapshot).digest("hex");
-  await mkdir(".appointment-state", { recursive: true });
-  await writeFile(
-    path.join(".appointment-state", "current-state.txt"),
-    stateHash,
-  );
+  await page1.waitForLoadState("domcontentloaded");
+  const hasErrorMessage = await page1
+    .getByTestId("error_message-")
+    .isVisible()
+    .catch(() => false);
 
-  await expect(page1.getByTestId("error_message-")).not.toBeVisible();
+  const bodyText = await page1.locator("body").innerText();
+  if (!hasErrorMessage) {
+    process.stderr.write(
+      `[playwright] Expected error message was not present. URL: ${page1.url()}\nBody preview: ${bodyText.slice(0, 1000)}\n`,
+    );
+  } else {
+    process.stderr.write(
+      `[playwright] Error message was present. URL: ${page1.url()}\nBody preview: ${bodyText.slice(0, 1000)}\n`,
+    );
+    const snapshot = `${page1.url()}\n${await page1.locator("body").innerText()}`;
+    const stateHash = createHash("sha256").update(snapshot).digest("hex");
+    await mkdir(".appointment-state", { recursive: true });
+    await writeFile(
+      path.join(".appointment-state", "current-state.txt"),
+      stateHash,
+    );
+  }
 });

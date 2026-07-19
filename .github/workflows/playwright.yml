@@ -34,31 +34,40 @@ jobs:
           key: appointment-state-${{ runner.os }}-${{ github.workflow }}-${{ github.repository }}
 
       - name: Run Playwright script
+        id: playwright_run
         env:
           WEBSITE: ${{ secrets.WEBSITE }}
         run: |
           mkdir -p .appointment-state
+          set +e
           npx playwright test browser.spec.ts
+          status=$?
+          echo "exit_code=$status" >> "$GITHUB_OUTPUT"
+          exit 0
 
       - name: Compare appointment state
         id: appointment_state
-        if: ${{ success() }}
+        if: ${{ steps.playwright_run.outputs.exit_code == '0' }}
         run: |
           mkdir -p .appointment-state
-          if [ -f .appointment-state/last-state.txt ]; then
-            if cmp -s .appointment-state/current-state.txt .appointment-state/last-state.txt; then
-              echo "changed=false" >> "$GITHUB_OUTPUT"
+          if [ -f .appointment-state/current-state.txt ]; then
+            if [ -f .appointment-state/last-state.txt ]; then
+              if cmp -s .appointment-state/current-state.txt .appointment-state/last-state.txt; then
+                echo "changed=false" >> "$GITHUB_OUTPUT"
+              else
+                cp .appointment-state/current-state.txt .appointment-state/last-state.txt
+                echo "changed=true" >> "$GITHUB_OUTPUT"
+              fi
             else
               cp .appointment-state/current-state.txt .appointment-state/last-state.txt
               echo "changed=true" >> "$GITHUB_OUTPUT"
             fi
           else
-            cp .appointment-state/current-state.txt .appointment-state/last-state.txt
-            echo "changed=true" >> "$GITHUB_OUTPUT"
+            echo "changed=false" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Send ntfy.sh notification on success
-        if: ${{ success() && steps.appointment_state.outputs.changed == 'true' && env.NTFY_TOPIC != '' }}
+        if: ${{ steps.playwright_run.outputs.exit_code == '0' && steps.appointment_state.outputs.changed == 'true' && env.NTFY_TOPIC != '' }}
         env:
           NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
         run: |

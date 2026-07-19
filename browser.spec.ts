@@ -50,6 +50,7 @@ test("test", async ({ page }) => {
     process.stderr.write(
       `[playwright] Expected error message was not present. URL: ${page1.url()}\nBody preview: ${bodyText.slice(0, 1000)}\n`,
     );
+    process.exit(1);
   } else {
     process.stderr.write(
       `[playwright] Error message was present. URL: ${page1.url()}\nBody preview: ${bodyText.slice(0, 1000)}\n`,
